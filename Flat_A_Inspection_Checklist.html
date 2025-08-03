@@ -1,0 +1,150 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLAT A 驗樓互動清單</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.8em;
+        }
+        h2 {
+            background-color: #f2f2f2;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 1em;
+        }
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+        @media (max-width: 600px) {
+            body {
+                margin: 10px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            h2 {
+                font-size: 1.1em;
+            }
+            .checklist-item {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>FLAT A 驗樓互動清單</h1>
+    
+    <h2>睡房區域（BR.1 / BR.2 / M.B.R.）</h2>
+    <div class="checklist-item"><input type="checkbox" id="br1"> <label for="br1">牆身有否裂痕、滲水或油漆問題</label></div>
+    <div class="checklist-item"><input type="checkbox" id="br2"> <label for="br2">地板平整、無空心或隆起</label></div>
+    <div class="checklist-item"><input type="checkbox" id="br3"> <label for="br3">窗戶正常開關、防水膠邊完好</label></div>
+    <div class="checklist-item"><input type="checkbox" id="br4"> <label for="br4">插座及照明正常供電</label></div>
+
+    <h2>客飯廳（LIV. / DIN.）</h2>
+    <div class="checklist-item"><input type="checkbox" id="liv1"> <label for="liv1">地板、牆身無明顯損壞</label></div>
+    <div class="checklist-item"><input type="checkbox" id="liv2"> <label for="liv2">電掣有反應、燈具亮起</label></div>
+    <div class="checklist-item"><input type="checkbox" id="liv3"> <label for="liv3">吊頂無滲水或霉斑</label></div>
+    <div class="checklist-item"><input type="checkbox" id="liv4"> <label for="liv4">窗台無滲水痕或鋁窗老化</label></div>
+
+    <h2>露台（BAL.）</h2>
+    <div class="checklist-item"><input type="checkbox" id="bal1"> <label for="bal1">欄杆穩固、無鬆脫</label></div>
+    <div class="checklist-item"><input type="checkbox" id="bal2"> <label for="bal2">排水順暢、無積水</label></div>
+    <div class="checklist-item"><input type="checkbox" id="bal3"> <label for="bal3">牆身無風化或滲水跡象</label></div>
+
+    <h2>廚房（KIT.）</h2>
+    <div class="checklist-item"><input type="checkbox" id="kit1"> <label for="kit1">檯面無裂痕、平整</label></div>
+    <div class="checklist-item"><input type="checkbox" id="kit2"> <label for="kit2">水龍頭及去水位正常</label></div>
+    <div class="checklist-item"><input type="checkbox" id="kit3"> <label for="kit3">煤氣喉、開關安全穩妥</label></div>
+    <div class="checklist-item"><input type="checkbox" id="kit4"> <label for="kit4">櫥櫃門鉸無損壞、無蟲蛀痕</label></div>
+
+    <h2>浴室（BATH / BATH 1）</h2>
+    <div class="checklist-item"><input type="checkbox" id="bath1"> <label for="bath1">地磚防滑、無破損</label></div>
+    <div class="checklist-item"><input type="checkbox" id="bath2"> <label for="bath2">洗手盆、坐廁正常沖水</label></div>
+    <div class="checklist-item"><input type="checkbox" id="bath3"> <label for="bath3">假天花無霉痕或滲水</label></div>
+    <div class="checklist-item"><input type="checkbox" id="bath4"> <label for="bath4">鏡櫃及潔具穩固、無裂痕</label></div>
+
+    <h2>雜物房（STORE）</h2>
+    <div class="checklist-item"><input type="checkbox" id="store1"> <label for="store1">無異味或過度潮濕</label></div>
+    <div class="checklist-item"><input type="checkbox" id="store2"> <label for="store2">牆壁無霉斑或結水</label></div>
+
+    <h2>電力裝置（ELEC. CABINET / 插座）</h2>
+    <div class="checklist-item"><input type="checkbox" id="elec1"> <label for="elec1">電錶箱無燒痕、標示清晰</label></div>
+    <div class="checklist-item"><input type="checkbox" id="elec2"> <label for="elec2">插頭及電掣正常供電</label></div>
+
+    <h2>冷氣機（A/C）</h2>
+    <div class="checklist-item"><input type="checkbox" id="ac1"> <label for="ac1">冷氣正常運作</label></div>
+    <div class="checklist-item"><input type="checkbox" id="ac2"> <label for="ac2">無漏水或冷凝問題</label></div>
+    <div class="checklist-item"><input type="checkbox" id="ac3"> <label for="ac3">排水順暢</label></div>
+
+    <script>
+        // Save checkbox states to localStorage
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            // Load saved state
+            const savedState = localStorage.getItem(checkbox.id);
+            if (savedState === 'true') {
+                checkbox.checked = true;
+            }
+
+            // Save state on change
+            checkbox.addEventListener('change', () => {
+                localStorage.setItem(checkbox.id, checkbox.checked);
+            });
+        });
+    </script>
+</body>
+</html>
